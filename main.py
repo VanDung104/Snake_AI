@@ -60,7 +60,7 @@ def A_star(food1, snake1):
         s.parent =[]
     openset = [snake1[-1]]
     closedset=[]
-    dir_array1 =[]
+    dir_array1 =[] # direction array
     while True:
         current1 = min(openset, key=lambda x: x.f)
         openset = [openset[i] for i in range(len(openset)) if not openset[i] == current1]
@@ -109,7 +109,6 @@ current = snake[-1]
 path = A_star(food, snake)
 food_array = [food]
 
-
 while run:
     clock.tick(12)
     screen.fill(BLACK)
@@ -128,10 +127,11 @@ while run:
     if current.x == food.x and current.y == food.y:
         while True:
             food = matrix[randint(0, rows - 1)][randint(0, cols - 1)]
+            print("Sinh thuc an")
             if not (food.obstrucle or food in snake): # neu vi tri thuc an khong phai chuong ngai vat VA khong nam trong con ran thi thoat vong while
                 break
         food_array.append(food)
-        dir_array = A_star(food, snake)
+        path = A_star(food, snake)
     #Xử lý khi con rắn chưa đến được thức ăn:
     else:
         snake.pop(0)
