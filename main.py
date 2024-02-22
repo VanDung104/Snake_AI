@@ -1,3 +1,5 @@
+import sys
+
 from pygame import display, time, draw, QUIT, init, KEYDOWN, K_a, K_s, K_d, K_w
 from random import randint
 import pygame
@@ -11,6 +13,10 @@ BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 score = 0
+paused = False
+menu_options = ["Start", "Quit"]
+menu_options1 = ["Continue", "Quit"]
+menu_text = pygame.font.Font(None, 30).render("Snake Game", True, WHITE)
 
 cols = 25
 rows = 25
@@ -39,6 +45,35 @@ display.set_caption("snake_self")
 clock = time.Clock()
 
 
+def display_menu(screen, menu_text, options):
+    background_img = pygame.image.load('menu_img-13302.png')  # Đường dẫn tới tệp ảnh nền
+    background_img = pygame.transform.scale(background_img,(600, 600))  # Đổi kích thước ảnh nền cho phù hợp với màn hình
+    """Display the menu with given text and options."""
+    font = pygame.font.Font(None, 36)
+    menu_items = [font.render(text, True, WHITE) for text in options]
+    menu_rects = [item.get_rect(center=(width // 2, (height // 2) + index * 50)) for index, item in enumerate(menu_items)]
+
+    screen.blit(background_img, (0, 0))  # Vẽ ảnh nền lên màn hình
+    screen.blit(menu_text, (width // 2 - menu_text.get_width() // 2, height // 4 - menu_text.get_height() // 2))
+    for item, rect in zip(menu_items, menu_rects):
+        screen.blit(item, rect)
+    pygame.display.flip()
+
+def menu(screen, menu_text, options):
+    """Display menu and handle player input."""
+    display_menu(screen, menu_text, options)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return options.index("Start")  # Start the game
+                elif event.key == pygame.K_q:
+                    pygame.quit()
+                elif event.key == pygame.K_SPACE:
+                    return options.index("Continue")  # Start the game
 # Khoi tao cac o trong matrix
 class Node:
     def __init__(self, x, y):
@@ -73,6 +108,7 @@ class Node:
             self.neis.append(matrix[self.x + 1][self.y])
         if self.y < cols - 1:
             self.neis.append(matrix[self.x][self.y + 1])
+
 
 
 def A_star(food1, snake1):
@@ -131,53 +167,70 @@ current = snake[-1]
 path = A_star(food, snake)
 food_array = [food]
 
+while True:
+    menu_choice = menu(screen, menu_text, menu_options)
+    if menu_options[menu_choice] == "Start":
+        break
+    elif menu_options[menu_choice] == "Quit":
+        pygame.quit()
+        sys.exit()
+
 while run:
-    clock.tick(12)
-    screen.fill(BLACK)
-    direction = path.pop(-1)
-    if direction == 0:  # xuong
-        snake.append(matrix[current.x][current.y + 1])
-    elif direction == 1:  # right
-        snake.append(matrix[current.x + 1][current.y])
-    elif direction == 2:
-        snake.append(matrix[current.x][current.y - 1])
-    elif direction == 3:
-        snake.append(matrix[current.x - 1][current.y])
-    current = snake[-1]  # Tinh kc tu diem cuoi dung
+    if not paused:
+        clock.tick(12)
+        screen.fill(BLACK)
+        direction = path.pop(-1)
+        if direction == 0:  # xuong
+            snake.append(matrix[current.x][current.y + 1])
+        elif direction == 1:  # right
+            snake.append(matrix[current.x + 1][current.y])
+        elif direction == 2:
+            snake.append(matrix[current.x][current.y - 1])
+        elif direction == 3:
+            snake.append(matrix[current.x - 1][current.y])
+        current = snake[-1]  # Tinh kc tu diem cuoi dung
 
-    # Xu ly khi con ran den duoc thuc an --> Chon vi tri thuc an moi
-    if current.x == food.x and current.y == food.y:
-        while True:
-            food = matrix[randint(0, rows - 1)][randint(0, cols - 1)]
-            print("Sinh thuc an")
-            if not (food.obstrucle or food in snake):
-                # neu vi tri thuc an khong phai chuong ngai vat VA khong nam trong con ran thi thoat vong while
-                score += 1
-                break
-        food_array.append(food)
-        path = A_star(food, snake)
-    # Xử lý khi con rắn chưa đến được thức ăn:
+        # Xu ly khi con ran den duoc thuc an --> Chon vi tri thuc an moi
+        if current.x == food.x and current.y == food.y:
+            while True:
+                food = matrix[randint(0, rows - 1)][randint(0, cols - 1)]
+                print("Sinh thuc an")
+                if not (food.obstrucle or food in snake):
+                    # neu vi tri thuc an khong phai chuong ngai vat VA khong nam trong con ran thi thoat vong while
+                    score += 1
+                    break
+            food_array.append(food)
+            path = A_star(food, snake)
+        # Xử lý khi con rắn chưa đến được thức ăn:
+        else:
+            snake.pop(0)
+
+        # vẽ
+        screen.blit(backGround_img, (0, 0))
+        for Node in snake:
+            Node._update_ui(screen,body_img,25, 25)
+        for i in range(rows):
+            for j in range(cols):
+                if matrix[i][j].obstrucle:
+                    matrix[i][j]._update_ui(screen,boom_img,25, 25)
+
+        food._update_ui(screen,ball_img,25, 25)
+        snake[-1]._update_ui(screen,head_img,25, 25)
+
+        # Display score on the screen
+        font = pygame.font.Font(None, 36)
+        text = font.render("Score: " + str(score), True, WHITE)
+
+        screen.blit(text, (10, 10))
+        display.flip()  # Cap nhat man hinh hien thi
     else:
-        snake.pop(0)
+        menu_choice = menu(screen, menu_text, menu_options1)
+        if menu_options[menu_choice] == "Start":
+                paused = False
+        elif menu_options[menu_choice] == "Quit":
+            pygame.quit()
+            sys.exit()
 
-    # vẽ
-    screen.blit(backGround_img, (0, 0))
-    for Node in snake:
-        Node._update_ui(screen,body_img,25, 25)
-    for i in range(rows):
-        for j in range(cols):
-            if matrix[i][j].obstrucle:
-                matrix[i][j]._update_ui(screen,boom_img,25, 25)
-
-    food._update_ui(screen,ball_img,25, 25)
-    snake[-1]._update_ui(screen,head_img,25, 25)
-
-    # Display score on the screen
-    font = pygame.font.Font(None, 36)
-    text = font.render("Score: " + str(score), True, WHITE)
-
-    screen.blit(text, (10, 10))
-    display.flip()  # Cap nhat man hinh hien thi
     for event in pygame.event.get():
         if event.type == QUIT:
             run = False
@@ -190,3 +243,5 @@ while run:
                 direction = 0
             elif event.key == K_d and not direction == 3:
                 direction = 1
+            elif event.key == pygame.K_SPACE:
+                paused = not paused
