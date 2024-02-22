@@ -26,7 +26,17 @@ BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE = 20
-SPEED = 20
+SPEED = 5
+#ảnh nền
+backGround_img = pygame.image.load('bg.png')
+backGround_img = pygame.transform.scale(backGround_img,(640,480))
+ball_img = pygame.image.load('apple.png')
+ball_img = pygame.transform.scale(ball_img,(25,25))
+head_img = pygame.image.load('snake_head.png')
+head_img = pygame.transform.scale(head_img,(25,25))
+body_img = pygame.image.load('snake_body.png')
+body_img = pygame.transform.scale(body_img,(25,25))
+
 
 
 class SnakeGame:
@@ -109,12 +119,14 @@ class SnakeGame:
 
     def _update_ui(self):
         self.display.fill(BLACK)
+        self.display.blit(backGround_img, (0, 0))
+        self.display.blit(head_img, pygame.Rect(self.snake[0].x, self.snake[0].y, BLOCK_SIZE, BLOCK_SIZE))
 
-        for pt in self.snake:
-            pygame.draw.rect(self.display, BLUE1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
-            pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x + 4, pt.y + 4, 12, 12))
-
-        pygame.draw.rect(self.display, RED, pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
+        # Vẽ thân rắn
+        for pt in self.snake[1:]:
+            self.display.blit(body_img, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
+        #Vẽ mồi
+        self.display.blit(ball_img,pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
 
         text = font.render("Score: " + str(self.score), True, WHITE)
         self.display.blit(text, [0, 0])
