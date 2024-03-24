@@ -1,5 +1,4 @@
 import sys
-
 from pygame import display, time, draw, QUIT, init, KEYDOWN, K_a, K_s, K_d, K_w
 from random import randint
 import pygame
@@ -13,6 +12,7 @@ BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 score = 0
+
 paused = False
 menu_options = ["Start", "Quit"]
 menu_options1 = ["Continue", "Quit"]
@@ -21,11 +21,11 @@ menu_text = pygame.font.Font(None, 30).render("Snake Game", True, WHITE)
 cols = 25
 rows = 25
 
-width = 600
-height = 600
+width = 700
+height = 700
 # đồ họa game
 backGround_img = pygame.image.load('bg.png')
-backGround_img = pygame.transform.scale(backGround_img, (600, 600))
+backGround_img = pygame.transform.scale(backGround_img, (width, height))
 ball_img = pygame.image.load('apple.png')
 ball_img = pygame.transform.scale(ball_img, (25, 25))
 head_img = pygame.image.load('snake_head.png')
@@ -36,8 +36,8 @@ body_img = pygame.image.load('snake_body4.png')
 body_img = pygame.transform.scale(body_img, (25, 25))
 rotated_body_img = pygame.transform.rotate(body_img, 90)
 # Chieu rong, chieu cao moi o
-wr = width / cols
-hr = height / rows
+wr = width/cols
+hr = height/rows
 direction = 1
 
 screen = display.set_mode([width, height])
@@ -47,7 +47,7 @@ clock = time.Clock()
 
 def display_menu(screen, menu_text, options):
     background_img = pygame.image.load('menu_img-13302.png')  # Đường dẫn tới tệp ảnh nền
-    background_img = pygame.transform.scale(background_img,(600, 600))  # Đổi kích thước ảnh nền cho phù hợp với màn hình
+    background_img = pygame.transform.scale(background_img,(width, height))  # Đổi kích thước ảnh nền cho phù hợp với màn hình
     """Display the menu with given text and options."""
     font = pygame.font.Font(None, 36)
     menu_items = [font.render(text, True, WHITE) for text in options]
@@ -91,10 +91,6 @@ class Node:
         # Neu gia tri ngau nhien [1,100] < 3 thi o do duoc tinh la chuong ngai vat
         if randint(1, 100) < 3:
             self.obstrucle = True
-
-    # def show(self, img):
-    #     draw.rect(screen, img, [self.x*hr+2, self.y*wr+2, hr-4, wr-4])
-    #     self.display.blit(img, pygame.Rect([self.x*hr+2, self.y*wr+2, hr-4, wr-4]))
 
     def _update_ui(self, screen, img, hr, wr):
         screen.blit(img, pygame.Rect([self.x * hr + 2, self.y * wr + 2, hr - 4, wr - 4]))
@@ -177,8 +173,8 @@ while True:
 
 while run:
     if not paused:
-        clock.tick(12)
-        screen.fill(BLACK)
+        clock.tick(30)
+        #screen.fill(BLACK)
         direction = path.pop(-1)
         if direction == 0:  # xuong
             snake.append(matrix[current.x][current.y + 1])
@@ -193,12 +189,27 @@ while run:
         # Xu ly khi con ran den duoc thuc an --> Chon vi tri thuc an moi
         if current.x == food.x and current.y == food.y:
             while True:
-                food = matrix[randint(0, rows - 1)][randint(0, cols - 1)]
-                print("Sinh thuc an")
-                if not (food.obstrucle or food in snake):
-                    # neu vi tri thuc an khong phai chuong ngai vat VA khong nam trong con ran thi thoat vong while
-                    score += 1
-                    break
+                # Sinh ra một vị trí ngẫu nhiên cho thức ăn
+                new_food_x = randint(0, rows - 1)
+                new_food_y = randint(0, cols - 1)
+                new_food = matrix[new_food_x][new_food_y]
+
+                # Kiểm tra xem vị trí mới có phải là chướng ngại vật hoặc nằm trên cơ thể của con rắn không
+                if not (new_food.obstrucle or new_food in snake):
+                    # Kiểm tra khoảng cách từ vị trí mới của thức ăn đến mỗi phần của con rắn
+                    too_close = False
+                    for segment in snake:
+                        distance = sqrt((new_food.x - segment.x) ** 2 + (new_food.y - segment.y) ** 2)
+                        if distance < 3:  # Nếu vị trí mới quá gần với bất kỳ phần nào của con rắn
+                            too_close = True
+                            break
+
+                    # Nếu vị trí mới đủ xa cả chướng ngại vật và cơ thể của con rắn
+                    if not too_close:
+                        score += 1
+                        print(score)
+                        food = new_food  # Cập nhật vị trí mới của thức ăn
+                        break
             food_array.append(food)
             path = A_star(food, snake)
         # Xử lý khi con rắn chưa đến được thức ăn:
